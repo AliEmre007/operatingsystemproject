@@ -57,3 +57,112 @@ void fileLogging(const char *message)
     fprintf(file, "%s\n", message); // Write the message to the file, followed by a newline.
     fclose(file);                   // Close the output file.
 }
+
+void log_queues()
+{                                   // Function to log the current state of process queues.
+    char logAllert[MAX_ROW_LENGTH]; // Buffer to store the log message.
+
+    strcpy(logAllert, "CPU-1 que1 (priority-0) (firstComeFirstServe) → "); // Initialize the log message for priority 0 processes.
+    for (int i = 0; i < process_tracker; i++)
+    {
+        if (processes[i].priority == 0)
+        {
+            strcat(logAllert, processes[i].id);
+            strcat(logAllert, "-");
+        }
+    }
+    logAllert[strlen(logAllert) - 1] = '\0';
+    printf("%s\n", logAllert);
+
+    strcpy(logAllert, "CPU-2 que2 (priority-1) (shortestJobFirst) → "); // Initialize the log message for priority 1 processes.
+    for (int i = 0; i < process_tracker; i++)
+    {
+        if (processes[i].priority == 1)
+        {                                       // Check if the process has priority 1.
+            strcat(logAllert, processes[i].id); // Append the process ID to the log message.
+            strcat(logAllert, "-");             // Append a dash to separate process IDs.
+        }
+    }
+    logAllert[strlen(logAllert) - 1] = '\0';
+    printf("%s\n", logAllert);
+
+    strcpy(logAllert, "CPU-2 que3 (priority-2) (RR-q8) → "); // Initialize the log message for priority 2 processes.
+    for (int i = 0; i < process_tracker; i++)
+    {
+        if (processes[i].priority == 2)
+        {                                       // Check if the process has priority 2.
+            strcat(logAllert, processes[i].id); // Append the process ID to the log message.
+            strcat(logAllert, "-");             // Append a dash to separate process IDs.
+        }
+    }
+    logAllert[strlen(logAllert) - 1] = '\0';
+    printf("%s\n", logAllert);
+
+    strcpy(logAllert, "CPU-2 que4 (priority-3) (RR-q16) → "); // Initialize the log message for priority 3 processes.
+    for (int i = 0; i < process_tracker; i++)
+    {
+        if (processes[i].priority == 3)
+        { // Check if the process has priority 3.
+            strcat(logAllert, processes[i].id);
+            strcat(logAllert, "-");
+        }
+    }
+    logAllert[strlen(logAllert) - 1] = '\0';
+    printf("%s\n", logAllert);
+}
+
+int resourceCheck(int priority, int required_ram, int required_cpu)
+{ // Function to check if resources are available for a process.
+    if (priority == 0)
+    {
+        return (required_ram <= available_ram_priority_0 && required_cpu <= available_cpu); // Return true if both RAM and CPU requirements can be met for priority 0.
+    }
+    else
+    {
+        return (required_ram <= available_ram_other && required_cpu <= available_cpu); // Return true if both RAM and CPU requirements can be met for non-priority 0.
+    }
+}
+
+void resourceAllocation(int priority, int required_ram, int required_cpu)
+{ // Function to allocate resources to a process.
+    if (priority == 0)
+    {
+        available_ram_priority_0 -= required_ram; // Deduct the required RAM from the available RAM for priority 0.
+    }
+    else
+    {
+        available_ram_other -= required_ram;
+    }
+    available_cpu -= required_cpu;
+}
+
+void resourceReleasing(int priority, int released_ram, int released_cpu)
+{ // Function to release resources back to the pool after a process finishes.
+    if (priority == 0)
+    {
+        available_ram_priority_0 += released_ram; // Add the released RAM back to the available RAM for priority 0.
+    }
+    else
+    {
+        available_ram_other += released_ram; // Add the released RAM back to the available RAM for non-priority 0.
+    }
+    available_cpu += released_cpu; // Add the released CPU back to the available CPU.
+}
+Process *sortByBurstTime(Process *queue, int count)
+{ // Function to sort processes by their burst time using bubble sort.
+    Process *sorted = (Process *)malloc(count * sizeof(Process));
+    memcpy(sorted, queue, count * sizeof(Process)); // Copy the original queue into the sorted array.
+    for (int i = 0; i < count - 1; i++)
+    { // Outer loop for bubble sort, iterates over the entire array.
+        for (int j = 0; j < count - i - 1; j++)
+        { // Inner loop for bubble sort, performs the comparison and swapping.
+            if (sorted[j].burst_time > sorted[j + 1].burst_time)
+            { // Swap operations
+                Process temp = sorted[j];
+                sorted[j] = sorted[j + 1];
+                sorted[j + 1] = temp;
+            }
+        }
+    }
+    return sorted;
+}
